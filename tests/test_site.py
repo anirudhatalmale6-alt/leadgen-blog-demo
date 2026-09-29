@@ -399,11 +399,19 @@ def check_faq(browser, base):
 
 
 def main():
-    port = free_port()
-    httpd = serve(port)
-    base = "http://127.0.0.1:" + str(port)
+    # Pass a base URL to run the same checks against a deployed site:
+    #   python3 tests/test_site.py https://user.github.io/leadgen-blog-demo
+    override = sys.argv[1].rstrip("/") if len(sys.argv) > 1 else None
 
-    print("serving " + ROOT + " on " + base + "\n")
+    httpd = None
+    if override:
+        base = override
+        print("testing the deployed site at " + base + "\n")
+    else:
+        port = free_port()
+        httpd = serve(port)
+        base = "http://127.0.0.1:" + str(port)
+        print("serving " + ROOT + " on " + base + "\n")
 
     check_sources()
     check_contrast()
@@ -419,7 +427,8 @@ def main():
         check_faq(browser, base)
         browser.close()
 
-    httpd.shutdown()
+    if httpd:
+        httpd.shutdown()
 
     failed = [r for r in results if not r[1]]
     print("\n" + "=" * 62)
